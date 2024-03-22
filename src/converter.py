@@ -45,7 +45,51 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
     return new_nodes
 
 def extract_markdown_images(text):
-    return re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+    if text:
+        return re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+    return []
 
 def extract_markdown_links(text):
-    return re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
+    if text:
+        return re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
+    return []
+
+def split_nodes_image(old_nodes):
+    result = []
+    for old_node in old_nodes:
+        old_node_text = old_node.text
+        extracted_images = extract_markdown_images(old_node.text)
+        for idx, extracted_image in enumerate(extracted_images):
+            new_nodes = old_node_text.split(f"![{extracted_image[0]}]({extracted_image[1]})", 1)
+            if new_nodes[0]:
+                prefix_node = TextNode(new_nodes[0], text_type_text)
+                result.append(prefix_node)
+            image_node = TextNode(extracted_image[0], text_type_image, extracted_image[1])
+            result.append(image_node)
+            if idx+1 == len(extracted_images):
+                if new_nodes[1]:
+                    postfix_node = TextNode(new_nodes[1], text_type_text)
+                    result.append(postfix_node)
+            else:
+                old_node_text = new_nodes[1]
+    return result
+
+def split_nodes_link(old_nodes):
+    result = []
+    for old_node in old_nodes:
+        old_node_text = old_node.text
+        extracted_links = extract_markdown_links(old_node.text)
+        for idx, extracted_link in enumerate(extracted_links):
+            new_nodes = old_node_text.split(f"[{extracted_link[0]}]({extracted_link[1]})", 1)
+            if new_nodes[0]:
+                prefix_node = TextNode(new_nodes[0], text_type_text)
+                result.append(prefix_node)
+            image_node = TextNode(extracted_link[0], text_type_link, extracted_link[1])
+            result.append(image_node)
+            if idx+1 == len(extracted_links):
+                if new_nodes[1]:
+                    postfix_node = TextNode(new_nodes[1], text_type_text)
+                    result.append(postfix_node)
+            else:
+                old_node_text = new_nodes[1]
+    return result

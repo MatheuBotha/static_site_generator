@@ -97,6 +97,76 @@ class TestConverter(unittest.TestCase):
         text = "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and ![another](https://i.imgur.com/dfsdkjfd.png)"
         expected = []
         self.assertEqual(expected, converter.extract_markdown_links(text))
+
+    def test_extract_images_and_links_with_empty_str(self):
+        text_empty = ''
+        text_none = None
+        self.assertEqual([], converter.extract_markdown_images(text_empty))
+        self.assertEqual([], converter.extract_markdown_links(text_empty))
+        self.assertEqual([], converter.extract_markdown_images(text_none))
+        self.assertEqual([], converter.extract_markdown_links(text_none))
+
+    def test_split_nodes_image(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            text_type_text,
+        )
+        new_nodes = converter.split_nodes_image([node])
+        expected = [
+            TextNode("This is text with an ", text_type_text),
+            TextNode("image", text_type_image, "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(" and another ", text_type_text),
+            TextNode(
+                "second image", text_type_image, "https://i.imgur.com/3elNhQu.png"
+            ),
+        ]
+        self.assertEqual(expected, new_nodes)
+
+    def test_split_nodes_image_at_start_and_end(self):
+        node = TextNode(
+            "![image](https://i.imgur.com/zjjcJKZ.png) This is text with an and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            text_type_text,
+        )
+        new_nodes = converter.split_nodes_image([node])
+        expected = [
+            TextNode("image", text_type_image, "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(" This is text with an and another ", text_type_text),
+            TextNode(
+                "second image", text_type_image, "https://i.imgur.com/3elNhQu.png"
+            ),
+        ]
+        self.assertEqual(expected, new_nodes)
         
+    def test_split_nodes_image_two_in_a_row(self):
+        node = TextNode(
+            "Start ![image](https://i.imgur.com/zjjcJKZ.png)![second image](https://i.imgur.com/3elNhQu.png) End",
+            text_type_text,
+        )
+        new_nodes = converter.split_nodes_image([node])
+        expected = [
+            TextNode("Start ", text_type_text),
+            TextNode("image", text_type_image, "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(
+                "second image", text_type_image, "https://i.imgur.com/3elNhQu.png"
+            ),
+            TextNode(" End", text_type_text),
+        ]
+        self.assertEqual(expected, new_nodes)
+
+    def test_split_nodes_link(self):
+        node = TextNode(
+            "This is text with an [link](https://i.imgur.com/zjjcJKZ.png) and another [second link](https://i.imgur.com/3elNhQu.png)",
+            text_type_text,
+        )
+        new_nodes = converter.split_nodes_link([node])
+        expected = [
+            TextNode("This is text with an ", text_type_text),
+            TextNode("link", text_type_link, "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(" and another ", text_type_text),
+            TextNode(
+                "second link", text_type_link, "https://i.imgur.com/3elNhQu.png"
+            ),
+        ]
+        self.assertEqual(expected, new_nodes)
 if __name__ == "__main__":
     unittest.main()
