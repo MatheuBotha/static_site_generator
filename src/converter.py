@@ -59,6 +59,8 @@ def split_nodes_image(old_nodes):
     for old_node in old_nodes:
         old_node_text = old_node.text
         extracted_images = extract_markdown_images(old_node.text)
+        if not extracted_images:
+            result.append(old_node)
         for idx, extracted_image in enumerate(extracted_images):
             new_nodes = old_node_text.split(f"![{extracted_image[0]}]({extracted_image[1]})", 1)
             if new_nodes[0]:
@@ -79,6 +81,8 @@ def split_nodes_link(old_nodes):
     for old_node in old_nodes:
         old_node_text = old_node.text
         extracted_links = extract_markdown_links(old_node.text)
+        if not extracted_links:
+            result.append(old_node)
         for idx, extracted_link in enumerate(extracted_links):
             new_nodes = old_node_text.split(f"[{extracted_link[0]}]({extracted_link[1]})", 1)
             if new_nodes[0]:
@@ -92,4 +96,17 @@ def split_nodes_link(old_nodes):
                     result.append(postfix_node)
             else:
                 old_node_text = new_nodes[1]
+    return result
+
+def text_to_textnodes(text):
+    result = [TextNode(text, text_type_text)]
+    text_types_delimiter_map = {
+        text_type_bold: '**',
+        text_type_italic: '*',
+        text_type_code: '`',
+    }
+    for text_type, delimiter in text_types_delimiter_map.items():
+        result = split_nodes_delimiter(result, delimiter, text_type)
+    result = split_nodes_image(result)
+    result = split_nodes_link(result)
     return result
