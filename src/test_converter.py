@@ -185,5 +185,28 @@ class TestConverter(unittest.TestCase):
         ]
         self.assertEqual(expected, converter.text_to_textnodes(text))
 
+    def test_markdown_to_blocks(self):
+        text = r"""# This is **bolded** paragraph
+
+This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line
+
+* This is a list
+* with items
+"""
+        expected = [
+            TextNode(r'# This is **bolded** paragraph', None, None),
+            TextNode(r'''This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line''', None, None),
+            TextNode(r'''* This is a list
+* with items''', None, None),
+        ] 
+        self.assertEqual(expected, converter.markdown_to_blocks(text))
+
+    def test_markdown_to_blocks_empty_text(self):
+        text = ''
+        expected = [] 
+        self.assertEqual(expected, converter.markdown_to_blocks(text))
+
 if __name__ == "__main__":
     unittest.main()

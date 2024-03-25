@@ -41,7 +41,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 if (idx + 1) % 2 == 0:
                     new_nodes.append(TextNode(token, text_type))
                 else:
-                    new_nodes.append(TextNode(token, text_type_text))
+                    new_nodes.append(TextNode(token, old_node.text_type))
     return new_nodes
 
 def extract_markdown_images(text):
@@ -109,4 +109,13 @@ def text_to_textnodes(text):
         result = split_nodes_delimiter(result, delimiter, text_type)
     result = split_nodes_image(result)
     result = split_nodes_link(result)
+    return result
+
+def markdown_to_blocks(markdown):
+    if not markdown:
+        return []
+    result = []
+    markdown_blocks = markdown.split('\n\n')
+    for block in markdown_blocks:
+        result.append(TextNode(block.strip(), None, None))
     return result
