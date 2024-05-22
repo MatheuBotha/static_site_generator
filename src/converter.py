@@ -10,6 +10,7 @@ from textnode import (
     text_type_link,
 )
 from leafnode import LeafNode
+from parentnode import ParentNode
 
 text_type_to_leaf_tag = {
     "text": None,
@@ -19,6 +20,16 @@ text_type_to_leaf_tag = {
     "link": "a",
     "image": "img",
 }
+
+block_types = {
+    "paragraph": "",
+    "heading": "#",
+    "code": "```",
+    "quote": ">",
+    "unordered_list": "-",
+    "ordered_list": "1.",
+}
+
 
 def text_node_to_html_node(text_node):
     if text_node.text_type not in text_type_to_leaf_tag:
@@ -119,3 +130,97 @@ def markdown_to_blocks(markdown):
     for block in markdown_blocks:
         result.append(TextNode(block.strip(), None, None))
     return result
+
+def block_to_block_type(block):
+    for block_type in block_types.items():
+        if block_type[1] != "":
+            if block.text.startswith(block_type[1]):
+                return block_type
+    return ("paragraph", block_types["paragraph"])
+
+def markdown_to_html_node(markdown):
+    top_block = ParentNode(tag="div", children=[])
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        top_block.children.append(html_node_from_text_node(block))
+    return top_block
+
+def html_node_from_text_node(block):
+    block_type = block_to_block_type(block)
+    if block_type[0] == "paragraph":
+        return paragraph_from_text_node(block)
+    if block_type[0] == "heading":
+        return heading_from_text_node(block)
+    if block_type[0] == "code":
+        return code_from_text_node(block)
+    if block_type[0] == "quote":
+        return quote_from_text_node(block)
+    if block_type[0] == "unordered_list":
+        return unordered_list_from_text_node(block)
+    if block_type[0] == "ordered_list":
+        return ordered_list_from_text_node(block)
+    return LeafNode('br')
+
+def text_to_html_nodes(text):
+    result = []
+    text_nodes = text_to_textnodes(text)
+    for text_node in text_nodes:
+        result.append(text_node_to_html_node(text_node))
+    return result
+
+def paragraph_from_text_node(block):
+    para = ParentNode("p", [])
+    para.children = text_to_html_nodes(block.text)
+    return para
+
+def heading_from_text_node(block):
+    heading = None    
+    if block.text.startswith("# "):
+        heading = ParentNode("h1", [])
+        block.text = block.text.lstrip("# ")
+    if block.text.startswith("## "):
+        heading = ParentNode("h2", [])
+        block.text = block.text.lstrip("## ")
+    if block.text.startswith("### "):
+        heading = ParentNode("h3", [])
+        block.text = block.text.lstrip("### ")
+    if block.text.startswith("#### "):
+        heading = ParentNode("h4", [])
+        block.text = block.text.lstrip("#### ")
+    if block.text.startswith("##### "):
+        heading = ParentNode("h5", [])
+        block.text = block.text.lstrip("##### ")
+    if block.text.startswith("###### "):
+        heading = ParentNode("h6", [])
+        block.text = block.text.lstrip("###### ")
+    heading.children = text_to_html_nodes(block.text)
+    return heading
+
+def code_from_text_node(block):
+    code_html_node = ParentNode("code", [])
+    code_html_node.children = text_to_html_nodes(block.text.replace("```", "").strip())
+    return code_html_node
+
+def quote_from_text_node(block):
+    quote_html_node = ParentNode("blockquote", [])
+    quote_html_node.children = text_to_html_nodes(block.text.replace("> ", "").strip())
+    return quote_html_node
+
+def unordered_list_from_text_node(block):
+    unordered_list = ParentNode("ul", children=[])
+    for item_text in block.text.split("- "):
+        if item_text.strip():
+            item_text = item_text.strip()
+            item = ParentNode("li", children=[])
+            item.children = text_to_html_nodes(item_text)
+            unordered_list.children.append(item)
+    return unordered_list
+
+def ordered_list_from_text_node(block):
+    ordered_list = ParentNode("ol", children=[])
+    for item_text in block.text.split("\n"):
+        item_text = item_text.split(".", 1)[1].strip()
+        item = ParentNode("li", children=[])
+        item.children = text_to_html_nodes(item_text)
+        ordered_list.children.append(item)
+    return ordered_list

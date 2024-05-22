@@ -208,5 +208,50 @@ This is the same paragraph on a new line''', None, None),
         expected = [] 
         self.assertEqual(expected, converter.markdown_to_blocks(text))
 
+    def test_block_to_block_type(self):
+        block = TextNode(r'''* This is a list
+* with items''', None, None)
+        expected = ("unordered_list", converter.block_types["unordered_list"])
+        self.assertEqual(expected, converter.block_to_block_type(block))
+
+    def test_markdown_to_html_node(self):
+        print('start test')
+        print('------------------------------')
+        text = r"""# This is **bolded** paragraph
+
+This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line
+
+* This is a list
+* with items
+"""
+        ##################################################################
+        print('##################')
+        aoeu = converter.markdown_to_html_node(text)
+        print('##################')
+        print(aoeu)
+        print('end test')
+        print('------------------------------')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     unittest.main()
